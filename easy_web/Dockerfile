@@ -2,7 +2,6 @@ FROM php:7.1-apache
 
 # update apt
 COPY www/ /var/www/html/
-COPY flag /flag
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
