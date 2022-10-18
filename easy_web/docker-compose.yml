@@ -7,10 +7,7 @@ services:
     # image指定build Dockerfile生成镜像的名称
     image: easy_web
     ports:
-        - 9999:80
-    volumes:
-        # 挂载的 Flag
-        - "$PWD/flag:/flag"
+        - "9999:80"
     command: 
         - /var/www/run.sh
     stdin_open: true
