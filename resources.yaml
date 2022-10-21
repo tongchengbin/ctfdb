@@ -3,4 +3,4 @@ resources:
   - image: tongchengbin/easy_web:ctf
     desc: web狗
     name: easy_web
-    resource_type: CT
+    resource_type: CTF
