@@ -4,3 +4,8 @@ resources:
     desc: web狗
     name: easy_web
     resource_type: CTF
+
+  - image: ctftraining/ciscn_2019_northern_china_day1_web2
+    desc: ciscn_2019_northern_china_day1_web2
+    name: ciscn_2019_northern_china_day1_web2
+    resource_type: CTF
