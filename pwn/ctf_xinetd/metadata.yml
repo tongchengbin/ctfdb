@@ -1,0 +1,3 @@
+image: tongchengbin/xinetd:ctf
+description: xinetd
+name: xinetd
