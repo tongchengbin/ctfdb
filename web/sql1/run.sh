@@ -1,35 +1,50 @@
 #!/bin/bash
 
-VOLUME_HOME="/var/lib/mysql"
-
 # 配置 PHP 上传限制
-sed -ri -e "s/^upload_max_filesize.*/upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE}/" \
-    -e "s/^post_max_size.*/post_max_size = ${PHP_POST_MAX_SIZE}/" /etc/php5/apache2/php.ini
-
-# 初始化 MySQL 数据库
-if [[ ! -d $VOLUME_HOME/mysql ]]; then
-    echo "=> An empty or uninitialized MySQL volume is detected in $VOLUME_HOME"
-    echo "=> Installing MySQL ..."
-    mysql_install_db > /dev/null 2>&1
-    echo "=> Done!"
-else
-    echo "=> Using an existing volume of MySQL"
+if [ -f "/etc/php/7.4/apache2/php.ini" ]; then
+    sed -ri -e "s/^upload_max_filesize.*/upload_max_filesize = 50M/" \
+        -e "s/^post_max_size.*/post_max_size = 50M/" /etc/php/7.4/apache2/php.ini
 fi
 
-# 启动 supervisord
-supervisord -n &
+# 启动 MySQL 服务
+service mysql start
 
 # 等待 MySQL 启动
 echo "=> Waiting for MySQL to start..."
-while ! mysqladmin ping --silent; do
+for i in {1..30}; do
+    if mysqladmin ping --silent; then
+        break
+    fi
+    echo "Waiting for MySQL to be ready... ($i/30)"
     sleep 1
 done
 
-# 导入数据库
-echo "=> Importing SQL file..."
-mysql -u root < /maoshe.sql
-chmod +x start.sh
-./start.sh
+# 创建数据库和导入数据
+echo "=> Creating database and importing SQL file..."
+mysql -e "CREATE DATABASE IF NOT EXISTS maoshe;"
+mysql maoshe < /maoshe.sql
+
+# 配置 Apache
+echo "=> Configuring Apache..."
+echo '<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /app
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+    <Directory /app>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>' > /etc/apache2/sites-available/000-default.conf
+
+# 启动 Apache 服务
+service apache2 start
+
+# 执行 start.sh 脚本
+echo "=> Running start.sh..."
+/start.sh
 
 # 保持容器运行
-tail -f /dev/null
+echo "=> Container is now running..."
+tail -f /var/log/apache2/access.log /var/log/apache2/error.log
