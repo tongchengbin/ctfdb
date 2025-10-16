@@ -3,6 +3,7 @@ COPY ./files /tmp/
 RUN rm -rf /var/www/html
 RUN cp -rf /tmp/html /var/www/
 COPY start.sh /start.sh
+RUN chmod +x /start.sh
 EXPOSE 80
 RUN chown -R www-data:www-data /var/www/html
 WORKDIR /var/www/html
